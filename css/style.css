@@ -4,29 +4,60 @@
 }
 
 body,
-html {
-    width: 96vw;
-    height: 98vh;
+
+html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
     background-color: gray;
 }
-
-body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+#menu {
+    height: 100%;
+    width: 100%;
+    position: relative;
     color: white;
     font-family: Arial, sans-serif;
+    background-image: url('../img/menuBg.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center center;
+    background-attachment: fixed;
 }
 
-#gameContainer {
+#menu canvas {
+    position: absolute;
+    top: 20%;
+    left: 47.3%;
+    transform: translateX(-50%);
+    image-rendering: pixelated;
+    height: 20vh;
+}
+
+#menu h1 {
+    position: absolute;
+    top: 22%;
+    left: 50%;
+    transform: translateX(-50%); 
+    font-size: 8rem;
+    white-space: nowrap;
+    overflow-x: auto;
+    text-overflow: ellipsis;
+}
+
+#menu h1 #moonSpacing {
+    display: inline-block;
+    width: 25vh;
+}
+
+#game {
+    display: none;
     width: 80%;
     height: 100%;
-    display: flex;
     justify-content: center;
     align-items: center;
 }
 
-canvas {
+#game canvas {
     background: #000;
     border: 2px solid #444;
     width: 100%;
