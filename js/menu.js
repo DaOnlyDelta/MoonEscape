@@ -7,7 +7,7 @@
 	const frameCount = 60;
 	const framePaths = [];
 	for (let i = 1; i <= frameCount; i++) {
-		framePaths.push(`./img/moon/${i}.png`);
+		framePaths.push(`./assets/moon/${i}.png`);
 	}
 
 	// Preload images
@@ -54,7 +54,6 @@
 		if (trans) return;
 		canvas.classList.add('hovered');
 		moonPlay.classList.add('hovered');
-		window.Sound?.play('select');
 	});
 
 	canvas.addEventListener('mouseout', () => {
@@ -68,7 +67,6 @@
 		if (trans) return;
 		settingsBtn.classList.add('hovered');
 		setIcon.classList.add('hovered');
-		window.Sound?.play('select');
 	});
 
 	settingsBtn.addEventListener('mouseout', () => {
@@ -82,7 +80,7 @@
 	function transition() {
 		trans = true;
 		window.gameStarted = true;
-		window.Sound?.play('drop');
+		window.Sound?.play('start');
 		canvas.classList.remove('hovered');
 		moonPlay.classList.remove('hovered');
 
@@ -97,12 +95,37 @@
 			veil.classList.add('transition');
 
 			setTimeout(() => {
+				window.playerVisible = true;
 				document.getElementById('background').classList.add('off');
-				document.getElementById('layout').classList.add('on');
+				document.getElementById('moon2').classList.add('on');
 				window.unveilFromCenter({ duration: 1000 });
 			}, 2000);
 		}, 800);
 	}
 
-	if (true) transition();
+	if (true) {
+		trans = true;
+		window.gameStarted = true;
+		window.Sound?.play('start');
+		canvas.classList.remove('hovered');
+		moonPlay.classList.remove('hovered');
+
+		settingsBtn.classList.add('fadeout');
+		moonPlay.classList.add('fadeout');
+		moonTextLeft?.classList.add('fadeout');
+		moonTextRight?.classList.add('fadeout');
+		canvas.classList.add('pre-transition');
+		
+		setTimeout(() => {
+			canvas.classList.add('transition');
+			veil.classList.add('transition');
+
+			setTimeout(() => {
+				window.playerVisible = true;
+				document.getElementById('background').classList.add('off');
+				document.getElementById('moon2').classList.add('on');
+				window.unveilFromCenter({ duration: 1000 });
+			}, 0);
+		}, 0);
+	};
 })();

@@ -25,7 +25,7 @@
     });
 
     window.openSettings = function() {
-        sound?.play('select');
+        window.Sound?.play('click');
         settings.classList.add('open');
         veil.classList.add('fade');
     }
@@ -37,7 +37,7 @@
     });
 
     window.closeSettings = function() {
-        sound?.play('close');
+        window.Sound?.play('close');
         settings.classList.remove('open');
         veil.classList.remove('fade');
     }
@@ -48,13 +48,13 @@
     const audio = document.getElementById('setAudio');
 
     creditsBtn.addEventListener('click', () => {
-        sound?.play('select');
+        window.Sound?.play('click');
         credits.classList.add('active');
         audio.classList.remove('active');
     });
 
     audioBtn.addEventListener('click', () => {
-        sound?.play('select');
+        window.Sound?.play('click');
         audio.classList.add('active');
         credits.classList.remove('active');
     });
@@ -82,46 +82,42 @@
     }
 
     musicL.addEventListener('click', () => {
-        sound?.play('select');
         musicVolume = Math.max(0, musicVolume - 0.1);
         musicValue.textContent = `${Math.round(musicVolume * 100)}%`;
         updateMusicVolume(musicVolume);
     });
 
     musicR.addEventListener('click', () => {
-        sound?.play('select');
         musicVolume = Math.min(1, musicVolume + 0.1);
         musicValue.textContent = `${Math.round(musicVolume * 100)}%`;
         updateMusicVolume(musicVolume);
     });
 
     sfxL.addEventListener('click', () => {
-        sound?.play('select');
         sfxVolume = Math.max(0, sfxVolume - 0.1);
         sfxValue.textContent = `${Math.round(sfxVolume * 100)}%`;
         updateSFXVolume(sfxVolume);
     });
 
     sfxR.addEventListener('click', () => {
-        sound?.play('select');
         sfxVolume = Math.min(1, sfxVolume + 0.1);
         sfxValue.textContent = `${Math.round(sfxVolume * 100)}%`;
         updateSFXVolume(sfxVolume);
     });
 
     function updateMusicVolume(volume) {
-        sound?.setMusicVolume(volume);
+        window.Sound?.setMusicVolume(volume);
     }
 
     function updateSFXVolume(volume) {
-        sound?.setSFXVolume(volume);
+        window.Sound?.setSFXVolume(volume);
     }
 
     const cancelBtn = document.getElementById('setBarCancel');
     const saveBtn = document.getElementById('setBarSave');
 
     cancelBtn.addEventListener('click', () => {
-        sound?.play('close');
+        window.Sound?.play('cancel');
         settings.classList.remove('open');
         veil.classList.remove('fade');
         musicVolume = savedMusicVolume;
@@ -133,7 +129,7 @@
     });
 
     saveBtn.addEventListener('click', () => {
-        sound?.play('get');
+        window.Sound?.play('save');
         settings.classList.remove('open');
         veil.classList.remove('fade');
         savedMusicVolume = musicVolume;

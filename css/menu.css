@@ -2,18 +2,47 @@
     position: absolute;
     left: 0;
     top: 0;
-    right: 0;
-    bottom: 0;
-    background-image: url('../img/menuBg.png');
-    background: url('../img/menuBg.png') no-repeat center center fixed;
+    width: 100%;
+    height: 100%;
+    background: url('../assets/menuBg.png') no-repeat center center fixed;
     background-size: cover;
     z-index: -1;
 }
 
 #background.off {
-    display: none;
+    background: url('../assets/star.jpg') no-repeat center center;
+    background-size: cover;
+    top: -25%;
 }
 
+#background.off::before {
+    content: '';
+    position: absolute;
+    left: 50.2%;
+    top: 50.2%;
+    transform: translate(-50%, -50%);
+    width: 1vh;
+    height: 1vh;
+    background-color: #ffffff;
+    border-radius: 50%;
+    filter: brightness(2.2);
+    box-shadow: 
+        0 0 50vh 5vh rgba(255, 255, 255, 0.12),
+        0 0 100vh 5vh rgba(255, 255, 255, 0.18),
+        0 0 200vh 10vh rgba(255, 255, 255, 0.12),
+        0 0 400vh 10vh rgba(255, 255, 255, 0.13),
+        0 0 700vh 10vh rgba(255, 255, 255, 0.12),
+        0 0 1100vh 10vh rgba(255, 255, 255, 0.12);
+    animation: starFlicker 4s infinite;
+    z-index: 1;
+}
+@keyframes starFlicker {
+    0% { opacity: 1; }
+    20% { opacity: 0; }
+    50% { opacity: 1; }
+    75% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
 #menu {
     height: 100%;
     width: 100%;

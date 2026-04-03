@@ -1,12 +1,12 @@
 (function() {
 	const SOUND_PATHS = {
 		close: './sounds/close.wav',
-		drop: './sounds/drop.wav',
+		cancel: './sounds/cancel.wav',
 		error: './sounds/error.wav',
-		get: './sounds/get.wav',
-		'level-up': './sounds/level-up.wav',
+		save: './sounds/save.wav',
+		click: './sounds/click.wav',
 		pause: './sounds/pause.wav',
-		select: './sounds/select.wav',
+		start: './sounds/start.wav',
 		music: './sounds/music.wav'
 	};
 

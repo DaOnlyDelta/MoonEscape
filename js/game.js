@@ -60,9 +60,9 @@
         }
     });
 
-    // Layout
-    const layoutCanvas = document.getElementById('layout');
+    const layoutCanvas = document.getElementById('moon2');
     const ltx = layoutCanvas.getContext('2d');
+    ltx.imageSmoothingEnabled = false;
 
     const wWidth = window.innerWidth;
     const wHeight = window.innerHeight;
@@ -73,11 +73,12 @@
     let dx = 0;
     let dy = wHeight / 2;
 
-    const scale = 2;
-    let width = 32;
-    let height = 32;
+    const scale = 1.5;
+    const upscaled = 2;
+    let width = 32 * upscaled;
+    let height = 32 * upscaled;
     sy = 0;
-    sx = 32;
+    sx = 32 * upscaled;
 
     const gridW = Math.ceil(wWidth / (width * scale)) + 1;
     console.log(gridW);
@@ -86,20 +87,24 @@
     console.log(gridH);
 
     function getRandomTileSx() {
-        const defaultTileSx = 32;
+        const defaultTileSx = width;
         const tileCount = 7;
 
         // Keep the current/default tile much more likely than the others.
         return Math.random() < 0.8
             ? defaultTileSx
-            : Math.floor(Math.random() * tileCount) * 32;
+            : Math.floor(Math.random() * tileCount) * width;
     }
 
     const img = new Image();
     let offset = false;
-    img.src = './assets/tilesetBackup.png';
+    img.src = './assets/tileset1.png';
     img.onload = () => {
         for (let i = 0; i < gridH; i++) {
+            // Calculate opacity for this row: 33%, then 100%
+            const rowOpacity = Math.min(1, 0.33 + i * 0.33);
+            ltx.globalAlpha = rowOpacity;
+            
             for (let j = 0; j < gridW; j++) {
                 sx = getRandomTileSx();
                 ltx.drawImage(img, sx, sy, width, height, dx, dy, width * scale, height * scale);
@@ -107,7 +112,7 @@
             }
             dy += (height / 4) * scale;
             offset = !offset;
-            dx = (offset) ? -width : 0;
+            dx = (offset) ? -width / (2 / scale) : 0;
         }
     };
 })();
