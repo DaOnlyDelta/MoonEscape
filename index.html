@@ -15,12 +15,15 @@
 <body>
     <div id="background"></div>
     <div id="veil"></div>
-    
+
     <!-- Menu -->
     <div id="menu">
         <h1 id="moonTitle">
             <span id="moonTextLeft" class="titleText">Moon</span>
-            <span id="moonWrap"><canvas id="moonCanvas"></canvas><svg id="moonPlay" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="#e3e3e3" role="img" aria-label="Play"><path d="M320-203v-560l440 280-440 280Zm60-280Zm0 171 269-171-269-171v342Z" /></svg></span>
+            <span id="moonWrap"><canvas id="moonCanvas"></canvas><svg id="moonPlay" xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 -960 960 960" fill="#e3e3e3" role="img" aria-label="Play">
+                    <path d="M320-203v-560l440 280-440 280Zm60-280Zm0 171 269-171-269-171v342Z" />
+                </svg></span>
             <span id="moonTextRight" class="titleText">Invasion</span>
         </h1>
 
@@ -32,7 +35,34 @@
 
     <!-- Settings -->
     <div id="settings">
-        
+        <h1>Settings</h1>
+        <h2>Audio</h2>
+        <div class="line"></div>
+        <div id="audioUI">
+            <div id="music">
+                <span class="audioIcon">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
+                        <path
+                            d="M360-120H200q-33 0-56.5-23.5T120-200v-280q0-75 28.5-140.5t77-114q48.5-48.5 114-77T480-840q75 0 140.5 28.5t114 77q48.5 48.5 77 114T840-480v280q0 33-23.5 56.5T760-120H600v-320h160v-40q0-117-81.5-198.5T480-760q-117 0-198.5 81.5T200-480v40h160v320Zm-80-240h-80v160h80v-160Zm400 0v160h80v-160h-80Zm-400 0h-80 80Zm400 0h80-80Z" />
+                    </svg>
+                </span>
+                <span class="audioLabel">Music</span>
+            </div>
+            <div id="sfx">
+                <span class="audioIcon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="#e3e3e3" role="img"
+                        aria-label="SFX">
+                        <path
+                            d="M640-440v-80h160v80H640Zm48 280-128-96 48-64 128 96-48 64Zm-80-480-48-64 128-96 48 64-128 96ZM120-360v-240h160l200-200v640L280-360H120Zm280-246-86 86H200v80h114l86 86v-252ZM300-480Z" />
+                    </svg>
+                </span>
+                <span class="audioLabel">SFX</span>
+            </div>
+        </div>
+        <h2>Credits</h2>
+        <div class="line"></div>
+        <h3>A game by <a href="https://github.com/DaOnlyDelta/MoonInvasion">Enej Leskovar</a></h3>
+        <div id="closeSettings"></div>
     </div>
 
     <!-- Game -->
@@ -49,4 +79,5 @@
 <script src="js/game.js"></script>
 <script src="js/menu.js"></script>
 <script src="js/settings.js"></script>
+
 </html>

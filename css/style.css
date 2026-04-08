@@ -18,7 +18,8 @@ html, body {
 }
 
 a {
-    color: white;
+    text-decoration: none;
+    color: #6EC1FF;
 }
 
 #veil {
