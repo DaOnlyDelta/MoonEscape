@@ -4,8 +4,12 @@
 
     if (!settingsBtn || !settings) return;
 
-    settingsBtn.addEventListener('click', () => {
+    window.openSettings = function() {
         settings.classList.add('open');
+    };
+
+    settingsBtn.addEventListener('click', () => {
+        window.openSettings();
     });
 
     const closeBtn = document.getElementById('closeSettings');
@@ -83,6 +87,4 @@
         () => Sound.getSFXVolume(),
         (volume) => Sound.setSFXVolume(volume)
     );
-
-    
 })();
