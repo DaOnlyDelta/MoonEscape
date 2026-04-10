@@ -1,24 +1,159 @@
-#game #player {
-    display: block;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 2;
-    pointer-events: none;
+#game {
+    display: none;
 }
 
-#game #moon2 {
-    display: none;
+#game.on {
+    display: block;
+}
+
+#game #bgMoon, #game #bgFloor, #game #bgFront {
     position: absolute;
     left: 0;
-    top: 0;
-    height: 100%;
+    bottom: 0;
     width: 100%;
+    height: 100%;
+    background-size: contain;
+    background-repeat: no-repeat;
+    overflow: hidden;
+}
+
+#game #bgMoon {
+    left: auto;
+    right: -70%;
+    top: 3%;
+    width: 150%;
+    height: 150%;
+    background-image: url('../assets/parallax/moon/moon_earth.png');
+    z-index: -4;
+}
+
+#game #bgFloor {
+    --bg-floor-gap: 200vw;
     z-index: -1;
 }
 
-#game #moon2.on {
-    display: block;
+#game #bgFloor::before,
+#game #bgFloor::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('../assets/parallax/moon/moon_floor.png');
+    background-repeat: repeat-x;
+    background-size: auto 100%;
+    animation: bgFloorScroll 1.2s linear infinite;
+}
+
+#game #bgFloor::after {
+    left: calc(100% + var(--bg-floor-gap));
+}
+
+@keyframes bgFloorScroll {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(calc(-100% - var(--bg-floor-gap)));
+    }
+}
+
+#game #bgFront {
+    width: 150%;
+    height: 150%;
+}
+
+#game #bgFront::before,
+#game #bgFront::after {
+    content: '';
+    position: absolute;
+    z-index: -2;
+    bottom: -50%;
+    width: 100%;
+    height: 100%;
+    background-image: url('../assets/parallax/moon/moon_front.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    animation: bgFrontScroll 2s linear infinite;
+}
+
+#game #bgFront::after {
+    left: 100%;
+}
+
+@keyframes bgFrontScroll {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(-100%);
+    }
+}
+
+#game #bgMid {
+    width: 150%;
+    height: 150%;
+}
+
+#game #bgMid::before,
+#game #bgMid::after {
+    content: '';
+    position: absolute;
+    z-index: -3;
+    bottom: -40%;
+    width: 100%;
+    height: 100%;
+    background-image: url('../assets/parallax/moon/moon_mid.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    animation: bgMidScroll 7s linear infinite;
+}
+
+#game #bgMid::after {
+    left: 100%;
+}
+
+@keyframes bgMidScroll {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(-100%);
+    }
+}
+
+#game #bgBack {
+    width: 200%;
+    height: 200%;
+}
+
+#game #bgBack::before,
+#game #bgBack::after {
+    content: '';
+    position: absolute;
+    z-index: -4;
+    bottom: -20%;
+    width: 100%;
+    height: 100%;
+    background-image: url('../assets/parallax/moon/moon_back.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    animation: bgBackScroll 15s linear infinite;
+}
+
+#game #bgBack::after {
+    left: 100%;
+}
+
+@keyframes bgBackScroll {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(-100%);
+    }
 }

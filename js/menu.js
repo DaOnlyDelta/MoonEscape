@@ -97,13 +97,13 @@
 			setTimeout(() => {
 				window.playerVisible = true;
 				document.getElementById('background').classList.add('off');
-				document.getElementById('moon2').classList.add('on');
+				document.getElementById('game').classList.add('on');
 				window.unveilFromCenter({ duration: 1000 });
 			}, 2000);
 		}, 800);
 	}
 
-	if (false) {
+	if (true) {
 		trans = true;
 		window.gameStarted = true;
 		window.Sound?.play('start');
@@ -123,7 +123,7 @@
 			setTimeout(() => {
 				window.playerVisible = true;
 				document.getElementById('background').classList.add('off');
-				document.getElementById('moon2').classList.add('on');
+				document.getElementById('game').classList.add('on');
 				window.unveilFromCenter({ duration: 1000 });
 			}, 0);
 		}, 0);
