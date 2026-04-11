@@ -51,28 +51,14 @@
     }
 }
 
-#game #bg #bgFront1, #game #bg #bgFront2, #game #bg #bgFront3 {
+#game #bg #bgFront1, #game #bg #bgFront2 {
     width: 3000px;
     z-index: -2;
-    animation: bgFrontAnimation 3.6s linear infinite;
+    animation: bgAnimation 2s linear infinite;
 }
 
 #game #bg #bgFront2 {
     left: 3000px;
-}
-
-#game #bg #bgFront3 {
-    left: 6000px;
-}
-
-@keyframes bgFrontAnimation {
-    from {
-        transform: translateX(0);
-    }
-
-    to {
-        transform: translateX(-200%);
-    }
 }
 
 #game #bg #bgMid1, #game #bg #bgMid2 {
