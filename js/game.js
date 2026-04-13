@@ -59,4 +59,7 @@
             window.openSettings();
         }
     });
+
+    // Enemies
+    
 })();

@@ -26,14 +26,92 @@
     const frameOrder = [2, 2, 3, 3, 4, 4, 3, 3];
     const frameDelay = 100;
     const moveSpeed = 8;
+    const laserBaseSpeed = 2.25;
+    const laserAcceleration = 2;
+    const laserMaxSpeed = 1000;
+    const laserChargeDuration = 250;
+    const laserFireCooldown = 500;
     let currentShipFrame = 0;
     let frameTimer = 0;
     let laserFrameIndex = 0;
-    let laserFramesLeft = 0;
-    let laserProjectile = null;
+    let laserMuzzleTimer = 0;
+    let laserChargePending = false;
     let blastFrame = 0;
     let loadedImgs = 0;
     let canFire = true;
+    const lasers = new Set();
+
+    class Laser {
+        constructor({ x, y, direction = 1, source = 'player' }) {
+            this.x = x;
+            this.y = y;
+            this.direction = direction;
+            this.source = source;
+            this.frameIndex = 0;
+            this.frameTimer = 0;
+            this.speed = laserBaseSpeed;
+        }
+
+        update(deltaTime) {
+            this.frameTimer += deltaTime;
+            const laserFrameDelay = frameDelay * 0.5;
+            while (this.frameTimer >= laserFrameDelay) {
+                this.frameTimer -= laserFrameDelay;
+                this.frameIndex = 1 - this.frameIndex;
+            }
+
+            const timeScale = deltaTime / 16.67;
+            this.speed += laserAcceleration * timeScale;
+            this.x += this.speed * this.direction * timeScale;
+        }
+
+        isExpired() {
+            const laserDrawWidth = laserWidth * scale;
+            return this.speed > laserMaxSpeed || this.x > laserCanvas.width + laserDrawWidth || this.x + laserDrawWidth < 0;
+        }
+
+        draw(context) {
+            const laserDrawWidth = laserWidth * scale;
+            const laserDrawHeight = laserHeight * scale;
+
+            if (this.direction >= 0) {
+                context.drawImage(
+                    laser,
+                    laserWidth * this.frameIndex,
+                    0,
+                    laserWidth,
+                    laserHeight,
+                    this.x,
+                    this.y,
+                    laserDrawWidth,
+                    laserDrawHeight
+                );
+                return;
+            }
+
+            context.save();
+            context.translate(this.x + laserDrawWidth, this.y);
+            context.scale(-1, 1);
+            context.drawImage(
+                laser,
+                laserWidth * this.frameIndex,
+                0,
+                laserWidth,
+                laserHeight,
+                0,
+                0,
+                laserDrawWidth,
+                laserDrawHeight
+            );
+            context.restore();
+        }
+    }
+
+    window.Laser = Laser;
+    window.playerLasers = lasers;
+    window.gameLasers = lasers;
+    window.spawnPlayerLaser = spawnPlayerLaser;
+    window.spawnEnemyLaser = spawnEnemyLaser;
 
     const ship = new Image();
     ship.src = './assets/ship/sprite_player_spaceship_up_down.png';
@@ -90,47 +168,32 @@
                 frameTimer -= frameDelay;
                 currentShipFrame = (currentShipFrame + 1) % frameOrder.length;
                 blastFrame = 1 - blastFrame;
+            }
 
-                if (laserFramesLeft > 0) {
-                    laserFrameIndex = (laserFrameIndex + 1) % 2;
-                    laserFramesLeft--;
-
-                    if (laserFramesLeft === 0) {
-                        laserProjectile = {
-                            x: dx + shipWidth * scale / 1.8,
-                            y: dy + (shipHeight * scale / 4) + dyOffset,
-                            age: 0,
-                            frameTimer: 0,
-                            frameIndex: 0,
-                        };
-                    }
+            if (laserMuzzleTimer > 0) {
+                laserMuzzleTimer = Math.max(0, laserMuzzleTimer - deltaTime);
+                if (laserMuzzleTimer === 0 && laserChargePending) {
+                    laserChargePending = false;
+                    spawnPlayerLaser();
                 }
             }
 
-            if (laserProjectile) {
-                laserProjectile.frameTimer += deltaTime;
-                while (laserProjectile.frameTimer >= frameDelay * 0.5) {
-                    laserProjectile.frameTimer -= frameDelay;
-                    laserProjectile.frameIndex = 1 - laserProjectile.frameIndex;
-                }
-
-                laserProjectile.age += deltaTime / frameDelay;
-                laserProjectile.x += 2 + Math.pow(laserProjectile.age, 2) * 0.6;
-
-                if (laserProjectile.x > laserCanvas.width) {
-                    laserProjectile = null;
+            for (const laserProjectile of lasers) {
+                laserProjectile.update(deltaTime);
+                if (laserProjectile.isExpired()) {
+                    lasers.delete(laserProjectile);
                 }
             }
 
             if (inputs.has('shoot') && canFire) {
                 canFire = false;
-                laserFramesLeft = 6;
                 laserFrameIndex = 0;
-                laserProjectile = null;
+                laserMuzzleTimer = laserChargeDuration;
+                laserChargePending = true;
 
                 setTimeout(() => {
                     canFire = true;
-                }, 1500);
+                }, laserFireCooldown);
             }
         }
 
@@ -141,10 +204,12 @@
             drawBlast();
             drawShip();
             drawLaserOut();
+            drawLasers();
         }
 
         function drawLaserOut() {
-            if (laserFramesLeft > 0) {
+            if (laserMuzzleTimer > 0) {
+                laserFrameIndex = Math.floor(laserMuzzleTimer / (frameDelay * 0.5)) % 2;
                 lctx.drawImage(
                     laserOut,
                     laserOutWidth * laserFrameIndex,
@@ -157,24 +222,12 @@
                     laserOutHeight * 2 * scale
                 );
             }
-
-            if (laserProjectile) {
-                drawMovingLaser();
-            }
         }
 
-        function drawMovingLaser() {
-            lctx.drawImage(
-                laser,
-                laserWidth * laserProjectile.frameIndex,
-                0,
-                laserWidth,
-                laserHeight,
-                laserProjectile.x,
-                laserProjectile.y,
-                laserWidth * scale,
-                laserHeight * scale
-            );
+        function drawLasers() {
+            for (const laserProjectile of lasers) {
+                laserProjectile.draw(lctx);
+            }
         }
 
         function drawShip() {
@@ -231,6 +284,24 @@
         }
 
         requestAnimationFrame(animate);
+    }
+
+    function spawnPlayerLaser() {
+        lasers.add(new Laser({
+            x: dx + shipWidth * scale / 1.8,
+            y: dy + (shipHeight * scale / 4) + dyOffset,
+            direction: 1,
+            source: 'player',
+        }));
+    }
+
+    function spawnEnemyLaser(x, y, direction = -1) {
+        lasers.add(new Laser({
+            x,
+            y,
+            direction,
+            source: 'enemy',
+        }));
     }
 
     // User inputs
