@@ -1,199 +1,209 @@
+/**
+ * File: sound.js
+ * Scope: Main Game Logic
+ * Handles global utilities and game state.
+ */
 (function() {
-	const SOUND_PATHS = {
-		close: './sounds/close.wav',
-		cancel: './sounds/cancel.wav',
-		error: './sounds/error.wav',
-		save: './sounds/save.wav',
-		click: './sounds/click.wav',
-		pause: './sounds/pause.wav',
-		start: './sounds/start.wav',
-		music: './sounds/music.wav'
-	};
+    const SOUND_PATHS = {
+        start: './sounds/start.wav',
+        menu: './sounds/menu.wav',
+        battle: './sounds/battle.wav',
+        death: './sounds/death.wav'
+    };
 
-	const state = {
-		masterVolume: 1,
-		musicVolume: 0.5,
-		sfxVolume: 0.5,
-		musicKey: 'music',
-		preloaded: new Map(),
-		initialized: false
-	};
+    const state = {
+        masterVolume: 1, // Kept purely for mathematical consistency with volume scaling
+        musicVolume: 0.5,
+        sfxVolume: 0.5,
+        musicKey: 'menu',
+        preloaded: new Map(),
+        initialized: false
+    };
 
-	function clampVolume(value) {
-		const n = Number(value);
-		if (!Number.isFinite(n)) return 0;
-		return Math.max(0, Math.min(1, n));
-	}
+    function clampVolume(value) {
+        const n = Number(value);
+        if (!Number.isFinite(n)) return 0;
+        return Math.max(0, Math.min(1, n));
+    }
 
-	function createAudio(path, loop) {
-		const audio = new Audio(path);
-		audio.preload = 'auto';
-		audio.loop = Boolean(loop);
-		audio.load();
-		return audio;
-	}
+    function createAudio(path, loop) {
+        const audio = new Audio(path);
+        audio.preload = 'auto';
+        audio.loop = Boolean(loop);
+        audio.load();
+        return audio;
+    }
 
-	function preloadAll() {
-		Object.entries(SOUND_PATHS).forEach(([key, path]) => {
-			if (state.preloaded.has(key)) return;
-			state.preloaded.set(key, createAudio(path, key === state.musicKey));
-		});
-		applyMusicVolume();
-	}
+    function preloadAll() {
+        Object.entries(SOUND_PATHS).forEach(([key, path]) => {
+            if (state.preloaded.has(key)) return;
+            state.preloaded.set(key, createAudio(path, key === state.musicKey));
+        });
+        applyMusicVolume();
+    }
 
-	function getMusicAudio() {
-		return state.preloaded.get(state.musicKey) || null;
-	}
+    function getMusicAudio() {
+        return state.preloaded.get(state.musicKey) || null;
+    }
 
-	function applyMusicVolume() {
-		const music = getMusicAudio();
-		if (!music) return;
-		music.volume = clampVolume(state.masterVolume * state.musicVolume);
-	}
+    function applyMusicVolume() {
+        const music = getMusicAudio();
+        if (!music) return;
+        music.volume = clampVolume(state.masterVolume * state.musicVolume);
+    }
 
-	function play(soundName) {
-		const base = state.preloaded.get(soundName);
-		if (!base) {
-			console.warn(`[Sound] Unknown sound: ${soundName}`);
-			return Promise.resolve();
-		}
+    function play(soundName) {
+        const base = state.preloaded.get(soundName);
+        if (!base) {
+            console.warn(`[Sound] Unknown sound: ${soundName}`);
+            return Promise.resolve();
+        }
 
-		if (soundName === state.musicKey) {
-			return playMusic();
-		}
+        if (soundName === state.musicKey) {
+            return playMusic();
+        }
 
-		const clip = base.cloneNode(true);
-		clip.volume = clampVolume(state.masterVolume * state.sfxVolume);
-		clip.currentTime = 0;
+        const clip = base.cloneNode(true);
+        clip.volume = clampVolume(state.masterVolume * state.sfxVolume);
+        clip.currentTime = 0;
 
-		const playPromise = clip.play();
-		if (playPromise && typeof playPromise.catch === 'function') {
-			playPromise.catch(() => {});
-		}
-		return playPromise || Promise.resolve();
-	}
+        const playPromise = clip.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+            playPromise.catch(() => {});
+        }
+        return playPromise || Promise.resolve();
+    }
 
-	function playMusic(forceRestart = false) {
-		const music = getMusicAudio();
-		if (!music) return Promise.resolve();
+    function playMusic(forceRestart = false) {
+        const music = getMusicAudio();
+        if (!music) return Promise.resolve();
 
-		applyMusicVolume();
-		if (forceRestart) {
-			music.currentTime = 0;
-		}
+        applyMusicVolume();
+        if (forceRestart) {
+            music.currentTime = 0;
+        }
 
-		const playPromise = music.play();
-		if (playPromise && typeof playPromise.catch === 'function') {
-			return playPromise.catch(() => {});
-		}
-		return Promise.resolve();
-	}
+        const playPromise = music.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+            return playPromise.catch(() => {});
+        }
+        return Promise.resolve();
+    }
 
-	function pauseMusic() {
-		const music = getMusicAudio();
-		if (!music) return;
-		music.pause();
-	}
+    function setMusicVolume(value) {
+        state.musicVolume = clampVolume(value);
+        applyMusicVolume();
+    }
 
-	function setMusicVolume(value) {
-		state.musicVolume = clampVolume(value);
-		applyMusicVolume();
-	}
+    function setSFXVolume(value) {
+        state.sfxVolume = clampVolume(value);
+    }
 
-	function setSFXVolume(value) {
-		state.sfxVolume = clampVolume(value);
-	}
+    function setMusicTrack(trackKeyOrPath, autoPlay = true) {
+        let nextKey = null;
 
-	function setMasterVolume(value) {
-		state.masterVolume = clampVolume(value);
-		applyMusicVolume();
-	}
+        if (state.preloaded.has(trackKeyOrPath)) {
+            nextKey = trackKeyOrPath;
+        } else {
+            nextKey = `music:${trackKeyOrPath}`;
+            state.preloaded.set(nextKey, createAudio(trackKeyOrPath, true));
+        }
 
-	function setMusicTrack(trackKeyOrPath, autoPlay = true) {
-		let nextKey = null;
+        const currentMusic = getMusicAudio();
+        if (currentMusic) {
+            currentMusic.pause();
+            currentMusic.currentTime = 0;
+        }
 
-		if (state.preloaded.has(trackKeyOrPath)) {
-			nextKey = trackKeyOrPath;
-		} else {
-			nextKey = `music:${trackKeyOrPath}`;
-			state.preloaded.set(nextKey, createAudio(trackKeyOrPath, true));
-		}
+        state.musicKey = nextKey;
+        const newMusic = getMusicAudio();
+        if (newMusic) {
+            newMusic.loop = true;
+            applyMusicVolume();
+        }
 
-		const currentMusic = getMusicAudio();
-		if (currentMusic) {
-			currentMusic.pause();
-			currentMusic.currentTime = 0;
-		}
+        if (autoPlay) {
+            playMusic(true);
+        }
+    }
 
-		state.musicKey = nextKey;
-		const newMusic = getMusicAudio();
-		if (newMusic) {
-			newMusic.loop = true;
-			applyMusicVolume();
-		}
+    function fadeMusicTrack(trackKeyOrPath, fadeOutMs = 3000, fadeInMs = 3000) {
+        const currentMusic = getMusicAudio();
+        const targetVolume = clampVolume(state.masterVolume * state.musicVolume);
 
-		if (autoPlay) {
-			playMusic(true);
-		}
-	}
+        if (!currentMusic) {
+            setMusicTrack(trackKeyOrPath, true);
+            return;
+        }
 
-	function replaceSound(soundName, path) {
-		const oldAudio = state.preloaded.get(soundName);
-		const wasPlayingMusic = soundName === state.musicKey && oldAudio && !oldAudio.paused;
+        const fps = 60;
+        const stepsOut = fadeOutMs / (1000 / fps);
+        let currentStepOut = 0;
 
-		if (oldAudio) {
-			oldAudio.pause();
-			oldAudio.currentTime = 0;
-		}
+        const fadeOutInt = setInterval(() => {
+            currentStepOut++;
+            const ratio = Math.max(0, 1 - (currentStepOut / stepsOut));
+            currentMusic.volume = targetVolume * ratio;
 
-		const replacement = createAudio(path, soundName === state.musicKey);
-		state.preloaded.set(soundName, replacement);
+            if (currentStepOut >= stepsOut) {
+                clearInterval(fadeOutInt);
+                currentMusic.volume = 0;
+                setMusicTrack(trackKeyOrPath, true);
 
-		if (soundName === state.musicKey) {
-			applyMusicVolume();
-			if (wasPlayingMusic) {
-				playMusic(true);
-			}
-		}
-	}
+                const nextMusic = getMusicAudio();
+                if (nextMusic) {
+                    nextMusic.volume = 0;
+                    const stepsIn = fadeInMs / (1000 / fps);
+                    let currentStepIn = 0;
 
-	function setupAutoplayRecovery() {
-		const unlock = () => {
-			playMusic();
-			document.removeEventListener('pointerdown', unlock);
-			document.removeEventListener('keydown', unlock);
-			document.removeEventListener('touchstart', unlock);
-		};
+                    const fadeInInt = setInterval(() => {
+                        currentStepIn++;
+                        const inRatio = Math.min(1, currentStepIn / stepsIn);
+                        nextMusic.volume = targetVolume * inRatio;
 
-		document.addEventListener('pointerdown', unlock, { once: true });
-		document.addEventListener('keydown', unlock, { once: true });
-		document.addEventListener('touchstart', unlock, { once: true });
-	}
+                        if (currentStepIn >= stepsIn) {
+                            clearInterval(fadeInInt);
+                            applyMusicVolume();
+                        }
+                    }, 1000 / fps);
+                }
+            }
+        }, 1000 / fps);
+    }
 
-	function init() {
-		if (state.initialized) return;
-		state.initialized = true;
+    function setupAutoplayRecovery() {
+        const unlock = () => {
+            playMusic();
+            document.removeEventListener('pointerdown', unlock);
+            document.removeEventListener('keydown', unlock);
+            document.removeEventListener('touchstart', unlock);
+        };
 
-		preloadAll();
-		playMusic();
-		setupAutoplayRecovery();
-	}
+        document.addEventListener('pointerdown', unlock, { once: true });
+        document.addEventListener('keydown', unlock, { once: true });
+        document.addEventListener('touchstart', unlock, { once: true });
+    }
 
-	window.Sound = {
-		init,
-		preloadAll,
-		play,
-		playMusic,
-		pauseMusic,
-		setMusicVolume,
-		setSFXVolume,
-		setMasterVolume,
-		setMusicTrack,
-		replaceSound,
-		getMusicVolume: () => state.musicVolume,
-		getSFXVolume: () => state.sfxVolume,
-		listSounds: () => Array.from(state.preloaded.keys())
-	};
+    function init() {
+        if (state.initialized) return;
+        state.initialized = true;
 
-	init();
+        preloadAll();
+        playMusic();
+        setupAutoplayRecovery();
+    }
+
+    window.Sound = {
+        init,
+        play,
+        playMusic,
+        setMusicVolume,
+        setSFXVolume,
+        setMusicTrack,
+        fadeMusicTrack,
+        getMusicVolume: () => state.musicVolume,
+        getSFXVolume: () => state.sfxVolume
+    };
+
+    init();
 })();

@@ -5,113 +5,103 @@
     canvas.height = window.innerHeight * 2; // * 2 to make the canvas reach futher than the right wall
     canvas.width = canvas.height * (250 / 150);
 
-    const laserCanvas = document.getElementById('lasers');
-    const lctx = laserCanvas.getContext('2d');
-    lctx.imageSmoothingEnabled = false;
-    laserCanvas.height = canvas.height;
-    laserCanvas.width = canvas.width;
-
     const scale = 0.8;
     const shipWidth = 350;
     const shipHeight = 150;
     const blastHeight = 32;
     const blastWidth = 64;
-    const laserOutWidth = 11;
-    const laserOutHeight = 10;
-    const laserWidth = 211;
-    const laserHeight = 92;
     let dy = canvas.height / 4;
     let dyOffset = 0;
-    const dx = 0;
+    let dx = window.innerWidth * 0.05;
     const frameOrder = [2, 2, 3, 3, 4, 4, 3, 3];
     const frameDelay = 100;
     const moveSpeed = 8;
-    const laserBaseSpeed = 2.25;
-    const laserAcceleration = 2;
-    const laserMaxSpeed = 1000;
-    const laserChargeDuration = 250;
-    const laserFireCooldown = 500;
     let currentShipFrame = 0;
+    
+    window.addEventListener('resize', () => {
+        dx = window.innerWidth * 0.05;
+    });
+    
+    let playerMaxHp = 4;
+    let playerHp = 4;
+    let isDead = false;
+    
+    window.damagePlayer = function(amount) {
+        if (isDead) return;
+        
+        playerHp -= amount;
+        
+        // Track damage taken for stats
+        window.gameStats = window.gameStats || {};
+        window.gameStats.damageTaken = (window.gameStats.damageTaken || 0) + amount;
+
+        if (playerHp <= 0) {
+            window.isGameOver = true;
+            window.isGamePaused = true;
+            playerHp = 0;
+            isDead = true;
+            
+            window.Sound?.play('death');
+            
+            if (window.createExplosion) {
+                window.createExplosion(dx + 16 + (shipWidth * scale / 2), dy + (shipHeight * scale / 2));
+            }
+            
+            const failedText = document.createElement('h1');
+            failedText.id = 'gameFailedTitle';
+            failedText.style.position = 'absolute';
+            failedText.style.top = '50%';
+            failedText.style.left = '50%';
+            failedText.style.transform = 'translate(-50%, -50%)';
+            failedText.style.fontSize = '8vh';
+            failedText.style.letterSpacing = '1vh';
+            failedText.style.whiteSpace = 'nowrap';
+            failedText.style.overflow = 'visible';
+            failedText.style.display = 'flex';
+            failedText.style.alignItems = 'center';
+            failedText.style.gap = '0.25em';
+            failedText.style.zIndex = '50';
+            failedText.innerHTML = '<span id="failTextLeft" class="titleText">Game</span><span id="failTextRight" class="titleText">Failed</span>';
+            document.getElementById('game').appendChild(failedText);
+            
+            document.body.style.cursor = 'default';
+            const retryBtn = document.createElement('button');
+            retryBtn.innerText = 'Retry';
+            // Simple generic styling
+            retryBtn.style.position = 'absolute';
+            retryBtn.style.top = '65%';
+            retryBtn.style.left = '50%';
+            retryBtn.style.transform = 'translate(-50%, 0)';
+            retryBtn.style.fontSize = '3vh';
+            retryBtn.style.padding = '1vh 2vh';
+            retryBtn.style.zIndex = '50';
+            retryBtn.style.cursor = 'pointer';
+            retryBtn.style.pointerEvents = 'auto';
+            retryBtn.style.background = '#222';
+            retryBtn.style.color = '#fff';
+            retryBtn.style.border = '2px solid #555';
+            retryBtn.style.borderRadius = '5px';
+            retryBtn.onclick = () => window.location.reload();
+            document.getElementById('game').appendChild(retryBtn);
+        }
+    };
+
+    window.healPlayer = function(amount) {
+        playerHp += amount;
+        if (playerHp > playerMaxHp) playerHp = playerMaxHp;
+    };
+
     let frameTimer = 0;
-    let laserFrameIndex = 0;
-    let laserMuzzleTimer = 0;
-    let laserChargePending = false;
     let blastFrame = 0;
     let loadedImgs = 0;
-    let canFire = true;
-    const lasers = new Set();
+    
+    // 0 to 1 progress scalar. Fills over 35 seconds
+    let gameProgress = 0;
+    const progressDuration = 35000;
 
-    class Laser {
-        constructor({ x, y, direction = 1, source = 'player' }) {
-            this.x = x;
-            this.y = y;
-            this.direction = direction;
-            this.source = source;
-            this.frameIndex = 0;
-            this.frameTimer = 0;
-            this.speed = laserBaseSpeed;
-        }
-
-        update(deltaTime) {
-            this.frameTimer += deltaTime;
-            const laserFrameDelay = frameDelay * 0.5;
-            while (this.frameTimer >= laserFrameDelay) {
-                this.frameTimer -= laserFrameDelay;
-                this.frameIndex = 1 - this.frameIndex;
-            }
-
-            const timeScale = deltaTime / 16.67;
-            this.speed += laserAcceleration * timeScale;
-            this.x += this.speed * this.direction * timeScale;
-        }
-
-        isExpired() {
-            const laserDrawWidth = laserWidth * scale;
-            return this.speed > laserMaxSpeed || this.x > laserCanvas.width + laserDrawWidth || this.x + laserDrawWidth < 0;
-        }
-
-        draw(context) {
-            const laserDrawWidth = laserWidth * scale;
-            const laserDrawHeight = laserHeight * scale;
-
-            if (this.direction >= 0) {
-                context.drawImage(
-                    laser,
-                    laserWidth * this.frameIndex,
-                    0,
-                    laserWidth,
-                    laserHeight,
-                    this.x,
-                    this.y,
-                    laserDrawWidth,
-                    laserDrawHeight
-                );
-                return;
-            }
-
-            context.save();
-            context.translate(this.x + laserDrawWidth, this.y);
-            context.scale(-1, 1);
-            context.drawImage(
-                laser,
-                laserWidth * this.frameIndex,
-                0,
-                laserWidth,
-                laserHeight,
-                0,
-                0,
-                laserDrawWidth,
-                laserDrawHeight
-            );
-            context.restore();
-        }
-    }
-
-    window.Laser = Laser;
-    window.playerLasers = lasers;
-    window.gameLasers = lasers;
-    window.spawnPlayerLaser = spawnPlayerLaser;
-    window.spawnEnemyLaser = spawnEnemyLaser;
+    window.getGameProgress = function() {
+        return gameProgress;
+    };
 
     const ship = new Image();
     ship.src = './assets/ship/sprite_player_spaceship_up_down.png';
@@ -137,13 +127,40 @@
         loaded();
     };
 
+    const hpBorder = new Image();
+    hpBorder.src = './assets/ProgressBar_01/BarV1_ProgressBarBorder.png';
+    hpBorder.onload = () => {
+        loaded();
+    };
+
+    const hpFill = new Image();
+    hpFill.src = './assets/ProgressBar_01/BarV1_ProgressBar.png';
+    hpFill.onload = () => {
+        loaded();
+    };
+
+    const progBorder = new Image();
+    progBorder.src = './assets/ProgressBar_08/BarV8_Bar.png';
+    progBorder.onload = () => {
+        loaded();
+    };
+
+    const progFill = new Image();
+    progFill.src = './assets/ProgressBar_08/BarV8_ProgressBar.png';
+    progFill.onload = () => {
+        loaded();
+    };
+
     function loaded() {
         loadedImgs++;
-        if (loadedImgs !== 4) return;
+        if (loadedImgs !== 8) return;
 
         let lastTime = performance.now();
 
         function update(deltaTime) {
+            gameProgress += deltaTime / progressDuration;
+            if (gameProgress > 1) gameProgress = 1;
+
             if (inputs.has('up')) {
                 dy -= moveSpeed * deltaTime / 16.67;
             }
@@ -169,64 +186,65 @@
                 currentShipFrame = (currentShipFrame + 1) % frameOrder.length;
                 blastFrame = 1 - blastFrame;
             }
-
-            if (laserMuzzleTimer > 0) {
-                laserMuzzleTimer = Math.max(0, laserMuzzleTimer - deltaTime);
-                if (laserMuzzleTimer === 0 && laserChargePending) {
-                    laserChargePending = false;
-                    spawnPlayerLaser();
-                }
-            }
-
-            for (const laserProjectile of lasers) {
-                laserProjectile.update(deltaTime);
-                if (laserProjectile.isExpired()) {
-                    lasers.delete(laserProjectile);
-                }
-            }
-
-            if (inputs.has('shoot') && canFire) {
-                canFire = false;
-                laserFrameIndex = 0;
-                laserMuzzleTimer = laserChargeDuration;
-                laserChargePending = true;
-
-                setTimeout(() => {
-                    canFire = true;
-                }, laserFireCooldown);
-            }
         }
 
         function drawFrame() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            lctx.clearRect(0, 0, laserCanvas.width, laserCanvas.height);
             
-            drawBlast();
-            drawShip();
-            drawLaserOut();
-            drawLasers();
+            if (playerHp > 0) {
+                drawBlast();
+                drawShip();
+            }
+            drawHpBar();
+            drawProgressBar();
         }
 
-        function drawLaserOut() {
-            if (laserMuzzleTimer > 0) {
-                laserFrameIndex = Math.floor(laserMuzzleTimer / (frameDelay * 0.5)) % 2;
-                lctx.drawImage(
-                    laserOut,
-                    laserOutWidth * laserFrameIndex,
-                    0,
-                    laserOutWidth,
-                    laserOutHeight,
-                    dx + shipWidth * scale / 1.6,
-                    dy + (shipHeight * scale / 2.1) + dyOffset,
-                    laserOutWidth * 2 * scale,
-                    laserOutHeight * 2 * scale
+        function drawProgressBar() {
+            if (gameProgress >= 1) return;
+
+            const margin = 20;
+            const scale = 1.5;
+            
+            const borderW = 274 * scale;
+            const borderH = 25 * scale;
+
+            // Draw empty border top middle. window.innerWidth corresponds to the true screen size
+            const xPos = (window.innerWidth / 2) - (borderW / 2);
+            ctx.drawImage(progBorder, xPos, margin, borderW, borderH);
+
+            if (gameProgress > 0) {
+                const fillW = 270;
+                const fillH = 21;
+                
+                ctx.drawImage(
+                    progFill,
+                    0, 0, fillW * gameProgress, fillH, 
+                    xPos + (2 * scale), margin + (2 * scale), (fillW * scale) * gameProgress, fillH * scale 
                 );
             }
         }
 
-        function drawLasers() {
-            for (const laserProjectile of lasers) {
-                laserProjectile.draw(lctx);
+        function drawHpBar() {
+            const margin = 20;
+            const scale = 1.5;
+            
+            const borderW = 274 * scale;
+            const borderH = 25 * scale;
+
+            // Draw empty border
+            ctx.drawImage(hpBorder, margin, margin, borderW, borderH);
+
+            // Draw filled portion based on HP
+            if (playerHp > 0) {
+                const fillRatio = playerHp / playerMaxHp;
+                const fillW = 271;
+                const fillH = 21;
+                
+                ctx.drawImage(
+                    hpFill,
+                    0, 0, fillW * fillRatio, fillH, 
+                    margin + (1 * scale), margin + (2 * scale), (fillW * scale) * fillRatio, fillH * scale 
+                );
             }
         }
 
@@ -278,7 +296,9 @@
             const deltaTime = now - lastTime;
             lastTime = now;
 
-            update(deltaTime);
+            if (window.gameStarted && !window.isGamePaused) {
+                update(deltaTime);
+            }
             drawFrame();
             requestAnimationFrame(animate);
         }
@@ -286,26 +306,37 @@
         requestAnimationFrame(animate);
     }
 
-    function spawnPlayerLaser() {
-        lasers.add(new Laser({
-            x: dx + shipWidth * scale / 1.8,
-            y: dy + (shipHeight * scale / 4) + dyOffset,
-            direction: 1,
-            source: 'player',
-        }));
+    function getPlayerLaserState() {
+        return {
+            spawn: {
+                x: dx + shipWidth * scale / 1.8,
+                y: dy + (shipHeight * scale / 4) + dyOffset,
+            },
+            muzzle: {
+                x: dx + shipWidth * scale / 1.6,
+                y: dy + (shipHeight * scale / 2.1) + dyOffset,
+            },
+        };
     }
 
-    function spawnEnemyLaser(x, y, direction = -1) {
-        lasers.add(new Laser({
-            x,
-            y,
-            direction,
-            source: 'enemy',
-        }));
+    window.getPlayerLaserState = getPlayerLaserState;
+
+    function getPlayerShipState() {
+        return {
+            x: dx + 16,
+            y: dy,
+            width: shipWidth * scale,
+            height: shipHeight * scale,
+            centerX: dx + 16 + (shipWidth * scale / 2),
+            centerY: dy + (shipHeight * scale / 2),
+        };
     }
+
+    window.getPlayerShipState = getPlayerShipState;
 
     // User inputs
     let inputs = new Set();
+    window.playerInputs = inputs;
 
     window.addEventListener('keydown', (evt) => {
         switch (evt.code) {
