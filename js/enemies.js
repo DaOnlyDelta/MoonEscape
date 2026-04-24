@@ -164,8 +164,8 @@
             frameTimer: 0,
             width: zigzagDrawWidth,
             height: zigzagDrawHeight,
-            hp: 7,      // Boss HP
-            maxHp: 7,
+            hp: 5,      // Boss HP
+            maxHp: 5,
             timeActive: 0,
             shootTimer: initialShootTimer || 0,
             shootInterval: 1000,
@@ -173,7 +173,7 @@
             windupTimer: 0,
             windupDuration: 500,
             phase: phase === undefined ? 0 : phase,
-            frequency: frequency || 0.002,
+            frequency: frequency || 0.001, // Up and down speed
             baseY: startY
         });
     }
@@ -376,7 +376,7 @@
                     
                     // Loot Table Algorithm -> High drops if progress >= 100%, ZERO drops during Tower
                     const currentProgress = typeof window.getGameProgress === 'function' ? window.getGameProgress() : 0;
-                    const dropRate = window.towerSpawned ? 0 : (currentProgress >= 1 ? 0.35 : 0.20);
+                    const dropRate = window.towerSpawned ? 0 : (currentProgress >= 1 ? 0.3 : 0.15);
                     
                     if (Math.random() < dropRate) {
                         powerups.push({
@@ -644,7 +644,7 @@
                 if (!window.towerDestroyed) {
                     kamikazeSpawnTimer += deltaTime;
                     // Increase intensity of homing threats dramatically once tower is active
-                    const kamiInterval = window.towerSpawned ? 800 : 4000;
+                    const kamiInterval = window.towerSpawned ? 1000 : 3000;
                     if (kamikazeSpawnTimer >= kamiInterval) {
                         kamikazeSpawnTimer = 0;
                         createKamikaze();
@@ -725,10 +725,12 @@
 
                 // Scenario Check: Generic Turret spawning mechanics 
                 shooterSpawnTimer += deltaTime;
-                if (shooterSpawnTimer >= 6000) {
+                
+                const progress = typeof window.getGameProgress === 'function' ? window.getGameProgress() : 0;
+                const spawnThreshold = progress >= 0.5 ? 2750 : 3500;
+
+                if (shooterSpawnTimer >= spawnThreshold) {
                     shooterSpawnTimer = 0;
-                    
-                    const progress = typeof window.getGameProgress === 'function' ? window.getGameProgress() : 0;
                     if (progress < 1) {
                         createShooter();
                     } else if (progress >= 1 && !window.bossSpawned) {
@@ -737,9 +739,9 @@
                         
                         const visibleHeight = canvas.height / 2;
                         // Spawn first slightly high
-                        createZigzag(visibleHeight * 0.25, 0, 0.002, 0);       
+                        createZigzag(visibleHeight * 0.25, 0, 0.001, 0);       
                         // Spawn second slightly low, phased sine interval so they weave through each other
-                        createZigzag(visibleHeight * 0.75, Math.PI / 2.5, 0.0027, 500); 
+                        createZigzag(visibleHeight * 0.75, Math.PI / 2.5, 0.0015, 500); 
                     }
                 }
 
